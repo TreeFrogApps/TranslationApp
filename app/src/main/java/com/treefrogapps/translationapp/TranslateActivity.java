@@ -153,9 +153,7 @@ public class TranslateActivity extends AppCompatActivity {
     public void okHttpConnect(String wordsToTranslate) {
 
         wordsToTranslate = wordsToTranslate.replace(" ", "+");
-
         String url = "http://www.treefrogapps.com/language/translateitjson.php?action=translations&english_words=" + wordsToTranslate;
-
 
         OkHttpClient okHttpClient = new OkHttpClient();
         okHttpClient.setConnectTimeout(9000, TimeUnit.MILLISECONDS);
@@ -163,7 +161,6 @@ public class TranslateActivity extends AppCompatActivity {
                 .addHeader("Content-Type", "application/json")
                 .url(url)
                 .build();
-
 
         okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
@@ -196,7 +193,6 @@ public class TranslateActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
 
                 } else {
                     Toast.makeText(getApplicationContext(), "Error : " + String.valueOf(response.code()), Toast.LENGTH_SHORT).show();
