@@ -15,34 +15,29 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 
 public class TranslateActivity extends AppCompatActivity {
 
-    String[] languagesArray;
-    String[] languagesArrayLC;
-    String[] translationsArray = new String[11];
-    ArrayList<TranslateList> translateArrayList = new ArrayList<>();
-
-    TranslateAdapter translateAdapter;
-    EditText englishWordsEditText;
-    ListView translateListView;
-    Button translateButton;
+    private String[] languagesArray;
+    private String[] languagesArrayLC;
+    private TranslateAdapter translateAdapter;
+    private EditText englishWordsEditText;
+    private ListView translateListView;
+    private Button translateButton;
 
 
     @Override
@@ -56,10 +51,7 @@ public class TranslateActivity extends AppCompatActivity {
         englishWordsEditText = (EditText) findViewById(R.id.englishWordsEditText);
         translateButton = (Button) findViewById(R.id.translateButton);
 
-        translateArrayList = updateListView(languagesArray, translationsArray);
-        translateAdapter = new TranslateAdapter(translateArrayList, getApplicationContext());
         translateListView = (ListView) findViewById(R.id.translateListView);
-        translateListView.setAdapter(translateAdapter);
 
 
         translateButton.setOnClickListener(new View.OnClickListener() {
@@ -68,7 +60,6 @@ public class TranslateActivity extends AppCompatActivity {
 
                 if (checkConnection() && !isEmpty(englishWordsEditText)) {
                     Toast.makeText(getApplicationContext(), getResources().getString(R.string.get_trans), Toast.LENGTH_SHORT).show();
-                    // new SaveTheFeed().execute();
                     okHttpConnect(englishWordsEditText.getText().toString());
 
                 } else {
@@ -108,24 +99,6 @@ public class TranslateActivity extends AppCompatActivity {
 
     }   //END OF isEmpty
 
-    public ArrayList<TranslateList> updateListView(String[] languagesArray, String[] translationsArray) {
-
-        translateArrayList.clear();
-
-        for (int i = 0; i < languagesArray.length; i++) {
-
-            TranslateList translateList = new TranslateList();
-
-            translateList.setLanguage(languagesArray[i]);
-            translateList.setTranslation(translationsArray[i]);
-
-            translateArrayList.add(translateList);
-        }
-
-        return translateArrayList;
-
-    }   // END OF updateListView
-
     public boolean checkConnection() {
 
         // system service connectivity manager
@@ -153,7 +126,7 @@ public class TranslateActivity extends AppCompatActivity {
     public void okHttpConnect(String wordsToTranslate) {
 
         wordsToTranslate = wordsToTranslate.replace(" ", "+");
-        String url = "http://www.treefrogapps.com/language/translateitjson.php?action=translations&english_words=" + wordsToTranslate;
+        String url = "http://www.treefrogapps.com/language/translateitjson2.php?action=translations&english_words=" + wordsToTranslate;
 
         OkHttpClient okHttpClient = new OkHttpClient();
         okHttpClient.setConnectTimeout(9000, TimeUnit.MILLISECONDS);
@@ -188,6 +161,7 @@ public class TranslateActivity extends AppCompatActivity {
 
                     try {
 
+                        Log.v("JSON STRING", jsonString);
                         outputTranslations(jsonString);
 
                     } catch (JSONException e) {
@@ -204,114 +178,25 @@ public class TranslateActivity extends AppCompatActivity {
 
     public void outputTranslations(String jsonString) throws JSONException {
 
-        JSONObject jsonObject = new JSONObject(jsonString);
-        JSONArray jsonArray = jsonObject.getJSONArray("translations");
+        Gson gson = new Gson();
 
-        for (int i = 0; i < jsonArray.length(); i++) {
-
-            jsonObject = jsonArray.getJSONObject(i);
-            translationsArray[i] = jsonObject.getString(languagesArrayLC[i]);
-
-            Log.v("Returned Translation = ", translationsArray[i]);
-        }
+        final Translations translationsArrayList = gson.fromJson(jsonString, Translations.class);
 
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
 
-                translateArrayList = updateListView(languagesArray, translationsArray);
-                translateListView.setAdapter(translateAdapter);
-
+                    translateAdapter = new TranslateAdapter(translationsArrayList, getApplicationContext());
+                    translateListView.setAdapter(translateAdapter);
             }
         });
-
-
 
     } // END OF outputTranslations
 
 
-/*
-
-    class SaveTheFeed extends AsyncTask<Void, Void, Void> {
-
-        String jsonString = "";
-        String result = "";
-
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            String wordsToTranslate = englishWordsEditText.getText().toString().trim();
-            wordsToTranslate = wordsToTranslate.replace(" ", "+");
-
-            String url = "http://www.treefrogapps.com/language/translateitjson.php?action=translations&english_words=" + wordsToTranslate;
-
-
-            BasicHttpParams myParams = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(myParams, 9000);
-            HttpConnectionParams.setSoTimeout(myParams, 9000);
-
-            DefaultHttpClient httpClient = new DefaultHttpClient(myParams);
-
-            HttpPost httpPost = new HttpPost("http://www.treefrogapps.com/language/translateitjson.php?action=translations&english_words=" + wordsToTranslate);
-            httpPost.setHeader("Content-Type", "application/json");
-
-            InputStream inputStream = null;
-
-            try {
-
-                HttpResponse response = httpClient.execute(httpPost);
-                HttpEntity entity = response.getEntity();
-
-                inputStream = entity.getContent();
-
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"), 8);
-
-                StringBuilder builder = new StringBuilder();
-                String line = null;
-
-                while ((line = reader.readLine()) != null){
-
-                    builder.append(line + "\n");
-
-                }
-
-                jsonString = builder.toString();
-
-                JSONObject jsonObject = new JSONObject(jsonString);
-
-                JSONArray jsonArray = jsonObject.getJSONArray("translations");
-
-                outputTranslations(jsonArray);
-
-            } catch (ClientProtocolException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
-            translateArrayList = updateListView(languagesArray, translationsArray);
-            translateListView.setAdapter(translateAdapter);
-
-        }
-
-    }
-
-*/
 
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle persistableBundle) {
         super.onSaveInstanceState(outState, persistableBundle);
-
-        outState.putStringArray("translationArray", translationsArray);
     }
 }

@@ -7,20 +7,9 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.TextView;
-
-import java.util.ArrayList;
-
 public class TranslateAdapter extends BaseAdapter {
 
-    private ArrayList<TranslateList> languagesArrayList = new ArrayList<>();
+    private Translations translationsArrayList;
     private Context context;
     private LayoutInflater layoutInflater;
 
@@ -29,10 +18,10 @@ public class TranslateAdapter extends BaseAdapter {
 
 
 
-    public TranslateAdapter(ArrayList<TranslateList> languagesArrayList, Context context){
+    public TranslateAdapter(Translations translationsArrayList, Context context){
         super();
 
-        this.languagesArrayList = languagesArrayList;
+        this.translationsArrayList = translationsArrayList;
         this.context = context;
         layoutInflater = LayoutInflater.from(context);
 
@@ -50,7 +39,7 @@ public class TranslateAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return languagesArrayList.size();
+        return translationsArrayList.getLanguagesArrayList().size();
     }
 
     @Override
@@ -85,8 +74,8 @@ public class TranslateAdapter extends BaseAdapter {
             viewHolder = (ViewHolder) convertView.getTag();
         }
 
-        viewHolder.languageTextView.setText(languagesArrayList.get(position).getLanguage());
-        viewHolder.translationTextView.setText(languagesArrayList.get(position).getTranslation());
+        viewHolder.languageTextView.setText(translationsArrayList.getLanguagesArrayList().get(position).getLanguage().toUpperCase());
+        viewHolder.translationTextView.setText(translationsArrayList.getLanguagesArrayList().get(position).getTranslation());
 
         return convertView;
     }
