@@ -11,8 +11,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
         <EditText
@@ -21,43 +20,40 @@
             android:layout_height="wrap_content"
             android:hint="@string/enter_translation" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:layout_weight="1"
+                android:id="@+id/speakButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/speak_button"/>
+
+            <Button
+                android:layout_weight="1"
+                android:id="@+id/translateButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/TRANSLATE"/>
+        </LinearLayout>
+
         <TextView
             android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="8dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/results"
             android:textColor="#ff990e10"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="8"
-        android:orientation="vertical">
 
         <ListView
             android:id="@+id/translateListView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:dividerHeight="0dp" />
+            android:dividerHeight="0dp"
+            />
     </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:layout_gravity="bottom">
-
-        <Button
-            android:id="@+id/translateButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/TRANSLATE"/>
-
-
-    </LinearLayout>
-
 
 </LinearLayout>

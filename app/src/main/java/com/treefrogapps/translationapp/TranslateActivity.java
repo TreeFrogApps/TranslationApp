@@ -5,11 +5,13 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -27,17 +29,31 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 
-public class TranslateActivity extends AppCompatActivity {
+public class TranslateActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
 
-    private String[] languagesArray;
-    private String[] languagesArrayLC;
     private TranslateAdapter translateAdapter;
     private EditText englishWordsEditText;
     private ListView translateListView;
+    private Button speakButton;
     private Button translateButton;
+    private Translations translationsArrayList;
+    private TextToSpeech textToSpeech;
+
+    final static Locale LOCALE_ARABIC = new Locale("pa", "Arab");
+    final static Locale LOCALE_CHINESE = new Locale("zh", "Hans");
+    final static Locale LOCALE_DANISH = new Locale("da", "DK");
+    final static Locale LOCALE_DUTCH = new Locale("nl", "NL");
+    final static Locale LOCALE_LATVIAN = new Locale("lv", "LV");
+    final static Locale LOCALE_PORTUGUESE = new Locale("pt", "PT");
+    final static Locale LOCALE_RUSSIAN = new Locale("ru", "RU");
+    final static Locale LOCALE_SPANISH = new Locale("es", "ES");
+
+    final static Locale[] LOCALE_LANGUAGES = {LOCALE_ARABIC, LOCALE_CHINESE, LOCALE_DANISH,LOCALE_DUTCH, Locale.FRENCH,
+            Locale.GERMAN, Locale.ITALIAN, LOCALE_LATVIAN, LOCALE_PORTUGUESE, LOCALE_RUSSIAN, LOCALE_SPANISH};
 
 
     @Override
@@ -45,15 +61,25 @@ public class TranslateActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_translate);
 
-        languagesArray = getResources().getStringArray(R.array.languagesArray);
-        languagesArrayLC = getResources().getStringArray(R.array.languagesArrayLC);
+        textToSpeech = new TextToSpeech(this,this);
 
         englishWordsEditText = (EditText) findViewById(R.id.englishWordsEditText);
-        translateButton = (Button) findViewById(R.id.translateButton);
-
         translateListView = (ListView) findViewById(R.id.translateListView);
 
+        speakButton = (Button) findViewById(R.id.speakButton);
+        speakButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+                if (!isEmpty(englishWordsEditText)) {
+
+                    textToSpeech.setLanguage(Locale.UK);
+                    textToSpeech.speak(englishWordsEditText.getText().toString(), TextToSpeech.QUEUE_FLUSH, null);
+                }
+            }
+        });
+
+        translateButton = (Button) findViewById(R.id.translateButton);
         translateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -69,7 +95,50 @@ public class TranslateActivity extends AppCompatActivity {
             }
         });
 
+        translateListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                if (position > 1) {
+                    String wordsToSpeak = translationsArrayList.getLanguagesArrayList().get(position).getTranslation();
+                    Log.v("WORDS TO SPEAK : ", wordsToSpeak);
+                    textToSpeech.setLanguage(LOCALE_LANGUAGES[position]);
+                    textToSpeech.speak(wordsToSpeak, TextToSpeech.QUEUE_FLUSH, null);
+
+                } else {
+
+                    Toast.makeText(getApplicationContext(), "Language not Supported", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
     } // END OF onCreate
+
+    @Override
+    public void onInit(int status) {
+
+        if (status == TextToSpeech.SUCCESS){
+
+            int result = textToSpeech.setLanguage(Locale.UK);
+
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED){
+                Toast.makeText(getApplicationContext(), "Language not Supported", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), "Text To Speech Not Available", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        if (textToSpeech != null) {
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
+        super.onDestroy();
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -125,7 +194,7 @@ public class TranslateActivity extends AppCompatActivity {
 
     public void okHttpConnect(String wordsToTranslate) {
 
-        wordsToTranslate = wordsToTranslate.replace(" ", "+");
+        wordsToTranslate = wordsToTranslate.replace(" ", "+").replace("'", "");
         String url = "http://www.treefrogapps.com/language/translateitjson2.php?action=translations&english_words=" + wordsToTranslate;
 
         OkHttpClient okHttpClient = new OkHttpClient();
@@ -180,23 +249,23 @@ public class TranslateActivity extends AppCompatActivity {
 
         Gson gson = new Gson();
 
-        final Translations translationsArrayList = gson.fromJson(jsonString, Translations.class);
+        translationsArrayList = gson.fromJson(jsonString, Translations.class);
 
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
 
-                    translateAdapter = new TranslateAdapter(translationsArrayList, getApplicationContext());
-                    translateListView.setAdapter(translateAdapter);
+                translateAdapter = new TranslateAdapter(translationsArrayList, getApplicationContext());
+                translateListView.setAdapter(translateAdapter);
             }
         });
 
     } // END OF outputTranslations
 
 
-
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle persistableBundle) {
         super.onSaveInstanceState(outState, persistableBundle);
     }
+
 }

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Translation</string>
+    <string name="app_name">Translation JSON</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
@@ -21,20 +21,11 @@
         <item>Russian</item>
         <item>Spanish</item>
     </string-array>
-    <string-array name="languagesArrayLC">
-        <item>arabic</item>
-        <item>chinese</item>
-        <item>danish</item>
-        <item>dutch</item>
-        <item>french</item>
-        <item>german</item>
-        <item>italian</item>
-        <item>latvian</item>
-        <item>portuguese</item>
-        <item>russian</item>
-        <item>spanish</item>
-    </string-array>
+
+    <string name="speech_input_phrase">Please Speak...</string>
+    <string name="stt_not_supported">Your Device Does Not Support Speech to Text</string>
     <string name="no_net">No Internet Connection</string>
     <string name="get_trans">Getting Translations</string>
     <string name="enter_words">Enter words to translate</string>
+    <string name="speak_button">Speak</string>
 </resources>

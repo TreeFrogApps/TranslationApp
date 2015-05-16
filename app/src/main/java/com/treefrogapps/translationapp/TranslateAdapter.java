@@ -1,6 +1,7 @@
 package com.treefrogapps.translationapp;
 
 import android.content.Context;
+import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,9 +13,7 @@ public class TranslateAdapter extends BaseAdapter {
     private Translations translationsArrayList;
     private Context context;
     private LayoutInflater layoutInflater;
-
-    private TextView languageTextView;
-    private TextView translationTextView;
+    static TextToSpeech textToSpeech;
 
 
 
@@ -24,18 +23,12 @@ public class TranslateAdapter extends BaseAdapter {
         this.translationsArrayList = translationsArrayList;
         this.context = context;
         layoutInflater = LayoutInflater.from(context);
-
-
-
-
     }
 
     private static class ViewHolder{
-
         protected TextView languageTextView;
         protected TextView translationTextView;
     }
-
 
     @Override
     public int getCount() {
@@ -53,7 +46,7 @@ public class TranslateAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
 
         final ViewHolder viewHolder;
 
@@ -63,6 +56,9 @@ public class TranslateAdapter extends BaseAdapter {
             viewHolder = new ViewHolder();
 
             convertView = layoutInflater.inflate(R.layout.listview_translate_item, null);
+            convertView.setFocusable(false);
+            convertView.setFocusableInTouchMode(false);
+            convertView.setClickable(false);
 
             viewHolder.languageTextView = (TextView) convertView.findViewById(R.id.textViewLanguage);
             viewHolder.translationTextView = (TextView) convertView.findViewById(R.id.textViewTranslation);
@@ -77,6 +73,8 @@ public class TranslateAdapter extends BaseAdapter {
         viewHolder.languageTextView.setText(translationsArrayList.getLanguagesArrayList().get(position).getLanguage().toUpperCase());
         viewHolder.translationTextView.setText(translationsArrayList.getLanguagesArrayList().get(position).getTranslation());
 
+
         return convertView;
     }
+
 }
