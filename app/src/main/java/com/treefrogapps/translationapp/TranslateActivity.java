@@ -1,10 +1,13 @@
 package com.treefrogapps.translationapp;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -29,6 +32,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -52,7 +56,7 @@ public class TranslateActivity extends AppCompatActivity implements TextToSpeech
     final static Locale LOCALE_RUSSIAN = new Locale("ru", "RU");
     final static Locale LOCALE_SPANISH = new Locale("es", "ES");
 
-    final static Locale[] LOCALE_LANGUAGES = {LOCALE_ARABIC, LOCALE_CHINESE, LOCALE_DANISH,LOCALE_DUTCH, Locale.FRENCH,
+    final static Locale[] LOCALE_LANGUAGES = {LOCALE_ARABIC, LOCALE_CHINESE, LOCALE_DANISH, LOCALE_DUTCH, Locale.FRENCH,
             Locale.GERMAN, Locale.ITALIAN, LOCALE_LATVIAN, LOCALE_PORTUGUESE, LOCALE_RUSSIAN, LOCALE_SPANISH};
 
 
@@ -61,7 +65,7 @@ public class TranslateActivity extends AppCompatActivity implements TextToSpeech
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_translate);
 
-        textToSpeech = new TextToSpeech(this,this);
+        textToSpeech = new TextToSpeech(this, this);
 
         englishWordsEditText = (EditText) findViewById(R.id.englishWordsEditText);
         translateListView = (ListView) findViewById(R.id.translateListView);
@@ -71,11 +75,7 @@ public class TranslateActivity extends AppCompatActivity implements TextToSpeech
             @Override
             public void onClick(View v) {
 
-                if (!isEmpty(englishWordsEditText)) {
-
-                    textToSpeech.setLanguage(Locale.UK);
-                    textToSpeech.speak(englishWordsEditText.getText().toString(), TextToSpeech.QUEUE_FLUSH, null);
-                }
+                speechToText();
             }
         });
 
@@ -117,11 +117,11 @@ public class TranslateActivity extends AppCompatActivity implements TextToSpeech
     @Override
     public void onInit(int status) {
 
-        if (status == TextToSpeech.SUCCESS){
+        if (status == TextToSpeech.SUCCESS) {
 
             int result = textToSpeech.setLanguage(Locale.UK);
 
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED){
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 Toast.makeText(getApplicationContext(), "Language not Supported", Toast.LENGTH_SHORT).show();
             }
         } else {
@@ -139,6 +139,36 @@ public class TranslateActivity extends AppCompatActivity implements TextToSpeech
         super.onDestroy();
     }
 
+    // method to display speechinput
+    public void speechToText(){
+
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getResources().getString(R.string.speech_input_phrase));
+
+        try{
+            // start the ActivityForResult - requestCode 100
+            startActivityForResult(intent, 100);
+
+        } catch (ActivityNotFoundException e){
+
+            e.printStackTrace();
+        }
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        // check the resultcode for which we want returned data, and check data is not null and ok result
+        if((requestCode == 100) && (data != null) && (resultCode == RESULT_OK)){
+
+            // get the spoken text (ArrayListForm)
+            ArrayList<String> spokenText = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+
+            // set the editText to the returned speech
+            englishWordsEditText.setText(spokenText.get(0));
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -231,6 +261,8 @@ public class TranslateActivity extends AppCompatActivity implements TextToSpeech
                     try {
 
                         Log.v("JSON STRING", jsonString);
+
+                        // use method to handle GSON and update ListView
                         outputTranslations(jsonString);
 
                     } catch (JSONException e) {
@@ -249,6 +281,7 @@ public class TranslateActivity extends AppCompatActivity implements TextToSpeech
 
         Gson gson = new Gson();
 
+        // Translation
         translationsArrayList = gson.fromJson(jsonString, Translations.class);
 
         runOnUiThread(new Runnable() {
